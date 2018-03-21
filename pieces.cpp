@@ -47,6 +47,7 @@ using namespace std;
 
 	pieces::~pieces()
 {
+		delete this;
 }
 
 

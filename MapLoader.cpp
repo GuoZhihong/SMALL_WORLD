@@ -3,7 +3,6 @@ MapLoader::MapLoader(void) {
 
 }
 MapLoader::~MapLoader(void) {
-
 }
 void MapLoader:: openInput(string path) {
 	inStream.open(path);
@@ -30,7 +29,7 @@ void MapLoader::readFile()
 		exit(0);
 	}
 
-	string M, N; int m, n;
+	string M, N;
 	
 	while (inStream.peek() !='\n')
 	{
@@ -42,17 +41,19 @@ void MapLoader::readFile()
 		inStream >> n;
 		inStream.get();
 	}
-	cout << "The map size is " << m << " * " << n << endl;
+	//Map map = Map(m, n);
+	getline(inStream, null, '\n');
+	getline(inStream, null, '\n');
 	cout << endl;
-	getline(inStream, null, '\n');
-	getline(inStream, null, '\n');
-
+	cout << endl;
 
 	int node, x, y;
 	
-	while (!inStream.eof()) {
-		list<int> adjacentNodes;
 
+	while (!inStream.eof()) {
+		vector<int> adjacentNodes;
+		vector<string>specialRegion;
+		string regionType;
 		inStream >> node;
 		inStream.get();
 		if (node > (m*n)) {
@@ -63,38 +64,53 @@ void MapLoader::readFile()
 
 		inStream >> x;
 		inStream.get();
-
 		inStream >> y;
 		inStream.get();
-		cout <<"Coordinates are x = "<< x <<" y ="<< y<<endl;
 
-		
 		int token; 
-		while (inStream.peek() != '\n'&&!(inStream.eof()))
+		while (inStream.peek() != '|')
 		{	
 			inStream >> token;
 			inStream.get();
-			adjacentNodes.push_back(token);
-
-		}
-		cout <<"Here are connected point with node "<<node<<endl;
-		list<int>::iterator itera;
-		for (itera = adjacentNodes.begin(); itera != adjacentNodes.end(); itera++) {
-			if (*itera == node) {
+			if (token == node) {
 				cout << "cannot have a node is connected to its own,invalid map file" << endl;
 				system("pause");
 				exit(0);
 			}
-			cout << *itera <<endl;
+			adjacentNodes.push_back(token);
 		}
+		inStream >> null;
+		inStream.get();
+		getline(inStream, regionType, ',');
+		string token2;
+		while (inStream.peek() != '\n' && !(inStream.eof())) {
+			getline(inStream, token2, ',');
+			specialRegion.push_back(token2);
+		}
+		
+		Region region = Region(node, x, y,adjacentNodes,regionType,specialRegion);
+		nodeSets.push_back(region);
 		if (adjacentNodes.size() == 0) {
 			cout << "cannot have a node is connected with nothing,invalid map file" << endl;
 			system("pause");
 			exit(0);
 		}
-		cout << endl;
 	}
-	cout << "The map file has been loaded successfully" << endl;
-	
+	cout << "The map has been loaded successfully" << endl;
+}
+
+int MapLoader::getM()
+{
+	return m;
+}
+
+int MapLoader::getN()
+{
+	return n;
+}
+
+vector<Region> MapLoader::getRegions()
+{
+	return nodeSets;
 }
 

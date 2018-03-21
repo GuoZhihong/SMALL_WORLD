@@ -9,12 +9,10 @@ using namespace std;
 
 Dice::Dice() : LastRoll(0)
 {
-	cout << "Dice Object is being created." << endl;
 }
 
 Dice::~Dice()
-{
-	cout << "Dice Object is being deleted." << endl;
+{	
 }
 
 void Dice::Roll()

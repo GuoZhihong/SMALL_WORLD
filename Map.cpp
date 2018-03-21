@@ -1,20 +1,32 @@
 #include "Map.h"
-Map::Map(int M,int N)
-{
+Map::Map(void){}
+Map::Map(int M,int N,int playerNumber)
+{	
 	this->M = M;
 	this->N = N;
+	if (playerNumber == 2) {
+		edgeRegions = {'B','C','D','H','I','L','W','V','T','R','Q','K','E','O'};
+	}
+	else if (playerNumber == 3) {
+
+	}
+	else if (playerNumber == 4) {
+
+	}
+	else {
+
+	}
 	setupMatrix();
 }
 
 Map::~Map(void)
-{
-	delete[]adjacentMatrix;
-	delete[]coordinates;
+{	
 }
 
-void Map::drawMap(int node,int x,int y)
-{
-	system("Cls");
+void Map::drawMap()
+{	
+	system("cls");
+	setupRegions();
 	/*nested loop to display the edges of the map*/
 	for (int i = 0; i < M+2; i++)
 	{
@@ -40,15 +52,11 @@ void Map::drawMap(int node,int x,int y)
 				coordinates[i][j] = '*';
 				cout << coordinates[i][j];
 			}
-			else if (i == y  && j == x && x !=0 && y !=0) {//print current added node
-				coordinates[i][j] = '@';
-				cout << coordinates[i][j];
-			}
-			else if (coordinates[i][j] == '@') {//print exsited nodes
+			else if (coordinates[i][j] >= 0|| coordinates[i][j]<=M*N) {//print exsited nodes
 				cout << coordinates[i][j];
 			}
 			else {//null space in the map
-				coordinates[i][j] = ' ';
+				coordinates[i][j] = ' '; 
 				cout << coordinates[i][j];
 			}
 		}
@@ -56,9 +64,9 @@ void Map::drawMap(int node,int x,int y)
 	}
 }
 
-void Map::setAdjacentNodes(int node,list<int> x)
+void Map::setAdjacentNodes(int node,vector<int> x)
 {
-	list<int>::iterator itera;
+	vector<int>::iterator itera;
 	for (itera = x.begin(); itera != x.end(); itera++)
 	{
 		adjacentMatrix[node][*itera] = 1;
@@ -76,18 +84,32 @@ bool Map::isAdacentNode(int a, int b)
 	return false;
 }
 
-void Map::setNode(int node, int x, int y, list<int>adjacentNodes)
+void Map::setupRegions(void)
 {
-	if (node > M*N || (x == 0 && y == 0)) {
-		cout << "Invalid node "<<node<<" ,out of map range,so do nothing." << endl;
-		return;
+	int node, x, y; vector<int> adjacentNodes;
+	for (int i = 0; i < (regionList.size()); i++)
+	{
+		node = regionList[i].getNodeNumber();
+		x = regionList[i].getX();
+		y = regionList[i].getY();
+		adjacentNodes = regionList[i].getAdjacentNodes();
+
+		if (node > M*N || (x == 0 && y == 0)) {
+			cout << "Invalid node " << node << " ,out of map range,so do nothing." << endl;
+			return;
+		}
+		if (node <= 26) {
+			coordinates[y][x] = node + 64;//ASCII code
+		}
+		else {
+			coordinates[y][x] = node + 70;
+		}
+		setAdjacentNodes(node, adjacentNodes);
 	}
-	setAdjacentNodes(node, adjacentNodes);
-	drawMap(node,x,y);
 }
 
 /*2-D array initialisazion*/
-void Map::setupMatrix(void)
+void Map::setupMatrix()
 {	/*
 		edges
 	__________
@@ -99,19 +121,58 @@ void Map::setupMatrix(void)
 
 
 	*/
-	coordinates = new char*[M+2];//reserve 2 rows,and 2 columns for map edges, operatable map size is m*n 
-	for (int i = 0; i < (N+2); i++) {
-		coordinates[i] = new char[N+2];
-		for (int j = 0; j < (N+2); j++) {
-			coordinates[i][j] = ' ';
+
+	/*
+	coordinates.resize(M + N);
+	
+	*/
+
+	coordinates.resize(M+N);//reserve 2 rows,and 2 columns for map edges, operatable map size is m*n 
+	for (int i = 0; i < (M + N); i++) {
+		coordinates[i].resize(N + 2);
+		for (int j = 0; j < (N + 2); j++) {
+			if (i < (M + 2)) {
+				coordinates[i][j] = ' ';
+			}
 		}
 	}
-
-	adjacentMatrix = new int*[(M*N) + 1];
-	for (int i = 0; i < (M*N + 1); i++) {
-		adjacentMatrix[i] = new int[(M*N) + 1];
-		for (int j = 0; j < (N*M + 1); j++) {
+	
+	adjacentMatrix.resize((M*N) + 1);
+	for (int i = 0; i < (M*N+1); i++) {
+		adjacentMatrix[i].resize((M*N)+1);
+		for (int j = 0; j < (N*M+1); j++) {
 			adjacentMatrix[i][j] = 0;
 		}
 	}
+	
+}
+
+vector<Region> Map::getRegionList()
+{
+	return regionList;
+}
+
+Region Map::getRegion(int nodeNumber)
+{
+	return regionList[nodeNumber-1];
+}
+
+void Map::setRegionList(vector<Region> regionList)
+{
+	this->regionList = regionList;
+}
+
+void Map::displayRegionList(void)
+{
+	for (int i = 0; i < regionList.size(); i++)
+	{
+		regionList[i].display();
+	}
+	cout << endl;
+	cout << endl;
+}
+
+vector<char> Map::getEdgeRegions()
+{
+	return edgeRegions;
 }

@@ -3,7 +3,11 @@
 
 using namespace std;
 
-
+Badges::Badges()
+{
+	BadgeName = "N/A";
+	BadgesTokens = 0;
+}
 Badges::Badges(int num) {
 	switch (num)
 	{
@@ -22,6 +26,7 @@ Badges::Badges(int num) {
 	case 4:
 		BadgeName = "Commando";
 		BadgesTokens = 4;
+		break;
 	case 5:
 		BadgeName = "Dragon Master";
 		BadgesTokens = 5;
@@ -91,7 +96,8 @@ Badges::Badges(int num) {
 	}
 }
 Badges::~Badges()
-{}
+{
+}
 
 void Badges::display()
 {
@@ -105,6 +111,36 @@ string Badges::GetBadgeName()
 int Badges::GetBadgesTokens()
 {
 	return BadgesTokens;
+}
+
+void Badges::setCoinPower(string s)
+{
+	coinPower = s;
+}
+
+string Badges::getCoinPower()
+{
+	return coinPower;
+}
+
+void Badges::setTokenPower1(string s)
+{
+	tokenPower1 = s;
+}
+
+string Badges::getTokenPower1()
+{
+	return tokenPower1;
+}
+
+void Badges::setTokenPower2(string s)
+{
+	tokenPower2 = s;
+}
+
+string Badges::getTokenPower2()
+{
+	return tokenPower2;
 }
 
 
