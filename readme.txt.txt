@@ -1,1 +1,0 @@
-This project used visual studio 2017 version,made by Zhihong Guo 40038183 and HuaxinLiu
