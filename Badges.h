@@ -1,5 +1,4 @@
 #ifndef Badges_h
-
 #define Badges_h
 #include <string>
 using namespace std;
@@ -38,5 +37,4 @@ public:
 };
 
 #endif  Badges_h
-#pragma once
 

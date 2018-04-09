@@ -28,4 +28,3 @@ public:
 };
 
 #endif  Tokens_h
-#pragma once

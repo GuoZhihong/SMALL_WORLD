@@ -1,5 +1,4 @@
 #ifndef Race_h
-
 #define Race_h
 #include <string>
 using namespace std;
@@ -39,4 +38,3 @@ public:
 };
 
 #endif  Race_h
-#pragma once

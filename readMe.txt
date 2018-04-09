@@ -10,4 +10,4 @@ jack：
 15/03/2018 main里面mainloop换成我自己的 还有后面的score
 	   player里加了若干方法 conquere 整体都改了 遗留问题：conquer整体逻辑要深入看，缺少 redistribution，score方法肯定有问题
 
-16/03/2018 player里加了若干方法 conquere 整体都改了加了用户选择要用多少token占地现在完全conquer没问题 遗留问题：（1）但是中间判断条件enable那个有可能有问题（特殊能力什么的）,(3）score方法肯定有问题,（4）色子不变（6)182行conquereOthers方法有问题没有把player被占领的地方从这个player手上删掉。(7)unused 在被conquere光以后 应该从当前player手上清空。
+16/03/2018 player里加了若干方法 conquere 整体都改了加了用户选择要用多少token占地现在完全conquer没问题 遗留问题：（1）但是中间判断条件enable那个有可能有问题（特殊能力什么的）（3）score方法肯定有问题,			 （4）色子不变,

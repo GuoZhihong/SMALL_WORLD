@@ -7,8 +7,9 @@
 #include<stdlib.h> 
 #include"Region.h"
 #include"MapLoader.h"
+#include"Subject.h"
 using namespace std;
-class Map
+class Map:public Subject
 {
 public:
 	Map(int M,int N,int playerNumber);

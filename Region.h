@@ -1,4 +1,5 @@
-#pragma once
+#ifndef Region_h
+#define Region_h
 #include<list>
 #include<vector>
 #include <iostream>
@@ -43,3 +44,4 @@ private:
 	string regionTpye;
 	vector<string>specialRegion;
 };
+#endif  Region_h

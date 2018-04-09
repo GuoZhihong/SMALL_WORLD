@@ -25,7 +25,7 @@ Map::~Map(void)
 
 void Map::drawMap()
 {	
-	system("cls");
+	//system("cls");
 	setupRegions();
 	/*nested loop to display the edges of the map*/
 	for (int i = 0; i < M+2; i++)

@@ -6,10 +6,18 @@
 #include <iostream>
 #include "Dice.h"
 #include "Player.h"
+#include"AggressivePlayer.h"
+#include"DefensivePlayer.h"
+#include"ModeratePlayer.h"
+#include"RandomPlayer.h"
+#include"GameStatisticsObserver.h"
+#include"PlayerDominationObserverDecorator.h"
+#include"VictoryCoinsObserverDecorator.h"
+#include"PlayerHandsObserverDecorator.h"
+#include"BasicGameStatisticsObserver.h"
 using namespace std;
 Race race[14];			// create an array to store 14 races;
 Badges badges[20];		// create an array to store 20 badges;
-//vector<Region> regionList1;
 void shuffleCardAndDisplay() {
 	
 	/*races and badges before shuffling*/
@@ -42,11 +50,42 @@ void shuffleCardAndDisplay() {
 	}
 	for (int i = 0; i < 6; i++)	// print the sequence after shuffle;
 	{
-		cout << i + 1 << "       " << race[i].GetSelect_Coin() << "       " << race[i].GetRaceName() << "          " << badges[i].GetBadgeName() << endl;
+		cout << "combo " << i + 1 << "     Select_Coin: " << race[i].GetSelect_Coin() << ".  RaceName:  " << race[i].GetRaceName() << ".  RaceToken: " << race[i].GetRaceTokens() << ".  BadgesName:  " << badges[i].GetBadgeName() << ".  BadgeToken:  " << badges[i].GetBadgesTokens() << endl;
 	}
 	cout << endl;
 }
-
+bool needDecorator(int i,Player* player) {
+	if (i == 1) {
+		
+		cout << "please specify if you want Observer Decorators or not by Y/N" << endl;
+		char needDecorator;
+		cin >> needDecorator;
+		if (needDecorator == 'Y') {
+			player->setNeedDecorator('Y');
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		if (player->getNeedDecorator() == 'Y') {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+}
+bool hasDecorator(Player player) {
+	if (player.getNeedDecorator() == 'N') {
+		return false;
+	}
+	else {
+		return true;
+	}
+	
+}
 /*Game logic*/
 int main() {
 	cout << "Welcome to Small world" << endl;
@@ -83,8 +122,8 @@ int main() {
 
 	/*setup map*/
 	Map map =  Map(mapLoader.getM(), mapLoader.getN(), playerNumber);
-	//regionList1 = mapLoader.getRegions();
 	map.setRegionList(mapLoader.getRegions());
+	GameStatisticsObserver gameStatisticsObserver(&map);
 	map.drawMap();
 
 	
@@ -95,82 +134,159 @@ int main() {
 
 	/*create players*/
 	vector<Player> playerList;
+	int playerType;
 	for (int i = 1; i <= playerNumber; i++)
 	{
-		Player player(i);
+		cout << "Player " << i << " please indicate which kind of player you are from following types" << endl;
+		cout << "(1) An aggressive player" << endl;
+		cout << "(2) A defensive player" << endl;
+		cout << "(3) A moderate player" << endl;
+		cout << "(4) A random player" << endl;
+		cin >> playerType;
+		Player player;
+		switch (playerType)
+		{
+		case 1:
+			player = Player(i, new AggressivePlayer());
+			cout << "You are An aggressive player now" << endl;
+			break;
+		case 2:
+			player = Player(i,new DefensivePlayer());
+			cout << "You are A defensive player now" << endl;
+			break;
+		case 3:
+			player = Player(i,new ModeratePlayer());
+			cout << "You are A moderate player now" << endl;
+			break;
+		case 4:
+			player = Player(i,new RandomPlayer());
+			cout << "You are A random player now" << endl;
+			break;
+		default:
+			cout << "No such type of player" << endl;
+			exit(0);
+		}
+
 		playerList.push_back(player);
 	}
-	/*
+	int gameTurn;
 
-	int gameTurn = 2;
-	string chooseNewRace;
-	for (int i = 0; i < gameTurn; i++) {
-		cout << "Game turn  [" << i + 1 << "] start:" << endl;
-		cout << endl;
-
-		for (int j = 0; j < playerList.size(); j++) {
-			cout << "please enter Y / N to choose a new race and special power combo : " << endl;
-			cin >> chooseNewRace;
-			if (chooseNewRace.compare("Y") == 0)
-			{
-				cout << "player " << playerList[j].getPlayerIndex() << " picks race and badge:" << endl;
-				playerList[j].pick_race(race, badges);
-				playerList[j].conquers(map, i, playerList);
-				playerList[j].scores();
-			}
-			else
-			{
-				playerList[j].conquers(map, i, playerList);
-				playerList[j].scores();
-			}
-
-
-		}
-
+	switch (playerNumber)
+	{
+	case 2:
+		gameTurn = 10;
+		break;
+	case 3:
+		gameTurn = 10;
+		break;
+	case 4:
+		gameTurn = 9;
+		break;
+	case 5:
+		gameTurn = 8;
+		break;
+	default:
+		exit(0);
 	}
-	*/
-
-	/*
-	int winnernumber = 1;
-	int winnerscore = playerList[0].getTotalScore();
-	// get max score from player
-
-	for (int i = 0; i < playerList.size(); i++) {
-
-		if (playerList[i].getTotalScore() > winnerscore) {
-			winnerscore = playerList[i].getTotalScore();
-			winnernumber = i + 1;
-		}
-		cout << "Player " << playerList[i].getPlayerIndex() << " has " << playerList[i].getTotalScore() << " coins ." << endl;
-	}
-
-	cout << "-----------Game finish all turn, winner is player " << winnernumber << endl;
-	*/
-
-	
-
-	int gameTurn = 10;
-	for (int i = 0; i < gameTurn; i++) {
-		cout << "Game turn  [" << i+1 << "] start:" << endl;
-		cout << endl;
+	for (int i = 1; i <= gameTurn; i++) {
 		for (int j = 0; j < playerList.size(); j++) {
-			if (i == 0) {
-				cout << "player " << playerList[j].getPlayerIndex() << " picks race and badge:" << endl;
-				playerList[j].pick_race(race, badges);
+			map.notify();
+			cout << "Player " << playerList[j].getPlayerIndex() << endl;
+			if (needDecorator(i,&playerList[j])) {
+				bool counter = true;
+				do {
+					cout << "Please choose the Observer Decorator you want from following choices 1 to 3,enter 0 if you don't want more" << endl;
+					cout << "1.Player Domination Observer Decorator" << endl;
+					cout << "2.Player Hands Observer Decorator" << endl;
+					cout << "3.Victory Coins Observer Decorator" << endl;
+					int decoratorChoice;
+					cin >> decoratorChoice;
+					switch (decoratorChoice)
+					{
+					case 0:
+						counter = false;
+						break;
+					case 1:
+						if (playerList[j].getNeedPlayerDominationObserver()) {
+							cout << "You already have had this type of observer,please choose again" << endl;
+						}
+						else {
+							playerList[j].setNeedPlayerDominationObserver(true);
+						}
+						break;
+					case 2:
+						if (playerList[j].getNeedPlayerHandsObserver()) {
+							cout << "You already have had this type of observer,please choose again" << endl;
+						}
+						else {
+							playerList[j].setNeedPlayerHandsObserver(true);
+						}
+						break;
+					case 3:
+						if (playerList[j].getNeedVictoryCoinsObserver()) {
+							cout << "You already have had this type of observer,please choose again" << endl;
+						}
+						else {
+							playerList[j].setNeedVictoryCoinsObserver(true);
+						}
+						break;
+					default:
+						break;
+					}
+				} while (counter);
 			}
-			else {
-				cout << "player " << playerList[j].getPlayerIndex() << " turn: please enter Y/N to choose a new race and special power combo:" << endl;
-				char choosenewrace;
-				cin >> choosenewrace;
-				if (choosenewrace == 'Y') {
-					cout << "player " << playerList[j].getPlayerIndex() << " picks race and badge:" << endl;
-					playerList[j].pick_race(race, badges);
-				}
+			playerList[j].executeStrategy(playerList,map,playerList[j].getPlayerIndex(),i,race,badges);
+			if (hasDecorator(playerList[j])) {
+				bool counter = true;
+				do {
+					cout << "Please choose the Observer Decorator you do not want anymore from following choices 1 to 3,enter 0 if you don't want more" << endl;
+					cout << "1.Player Domination Observer Decorator" << endl;
+					cout << "2.Player Hands Observer Decorator" << endl;
+					cout << "3.Victory Coins Observer Decorator" << endl;
+					int decoratorChoice;
+					cin >> decoratorChoice;
+					switch (decoratorChoice)
+					{
+					case 0:
+						counter = false;
+						break;
+					case 1:
+						if (playerList[j].getNeedPlayerDominationObserver()) {
+							playerList[j].setNeedPlayerDominationObserver(false);
+							playerList[j].Detach(1);
+						}
+						else {
+							cout<<"You do not have this type of observer,please choose again"<<endl;
+						}
+						break;
+					case 2:
+						if (playerList[j].getNeedPlayerHandsObserver()) {
+							playerList[j].setNeedPlayerHandsObserver(false);
+							playerList[j].Detach(2);
+						}
+						else {
+							cout << "You do not have this type of observer,please choose again" << endl;
+						}
+						break;
+					case 3:
+						if (playerList[j].getNeedVictoryCoinsObserver()) {
+							playerList[j].setNeedVictoryCoinsObserver(false);
+							playerList[j].Detach(3);
+						}
+						else {
+							cout << "You do not have this type of observer,please choose again" << endl;
+						}
+						break;
+					default:
+						break;
+					}
+				} while (counter);
 			}
-			playerList[j].conquers(map, j, playerList);
-			playerList[j].scores();
+			cout << endl;
 		}	
 	}
+
+
 
 	int winnernumber = playerList[0].getPlayerIndex();
 	int winnerscore = playerList[0].getTotalScore();
@@ -186,6 +302,7 @@ int main() {
 	}
 
 	cout << "-----------Game finish all turn, winner is player" << winnernumber << endl;
+
 
 	system("pause");
 	return 0;

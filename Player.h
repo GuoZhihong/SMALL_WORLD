@@ -7,18 +7,25 @@
 #include"Race.h"
 #include"Badges.h"
 #include "Map.h"
+#include"Strategy.h"
 #include <algorithm>
+#include"PhaseObserver.h"
+#include"PlayerDominationObserverDecorator.h"
+#include"PlayerHandsObserverDecorator.h"
+#include"VictoryCoinsObserverDecorator.h"
+#include"BasicGameStatisticsObserver.h"
 using namespace std;
-
-class Player
+class Strategy; class BasicGameStatisticsObserver;
+class PlayerDominationObserverDecorator; class PlayerHandsObserverDecorator; class VictoryCoinsObserverDecorator;
+class Player:public Subject
 {
 public:
 	Player();
-	Player(int playerIndex);
+	Player(int playerIndex,Strategy* strategy);
 	~Player();
 
 	void pick_race(Race race[], Badges badges[]);
-	void conquers(Map& map, int roundNumber, vector<Player> playerList);
+	void conquers(Map& map, int roundNumber, vector<Player>& playerList);
 	void scores();
 	void display();
 
@@ -57,16 +64,16 @@ public:
 	vector<Region> getRegions_Unused();
 	vector<Region> getRegions_Inhand();
 	void setRegions_Unused(vector<Region> regionList);
-	void setRegions_Inhand(Region region);
+	void setRegions_Inhand(Region& region);
+	void setRegions_Inhand(vector<Region> regionList);
 	void setUnusedRaceName(string s);
 	string getUnusedRaceName();
 
 	void setSpecialPowerToken(int i);
 	int getSpecialPowerToken();
 
-	void setDice(Dice d);
-	Dice getdice();
-
+	void setDice_Number_Unused(int i);
+	int getDice_Number_Unused();
 	void setDice_Number_Inhand(int i);
 	int getDice_Number_Inhand();
 	bool notAdjacentRegion(int regionIndex);
@@ -74,10 +81,28 @@ public:
 	bool belongItself(int regionIndex);
 	bool isWaterRegion(int regionIndex,Map& map);
 	bool notValidInput(int regionIndex, Map map);
-	void conquereOthers(int regionIndex,Map& map,vector<Player>playerList);
-private:
+	void conquereOthers(int regionIndex,Map& map,vector<Player>& playerList);
+	void redistribution(Map& map);
+	void executeStrategy(vector<Player>& playerList, Map& map, int currentPlayer, int roundNumber, Race race[], Badges badges[]);
 	vector<Region> Regions_Unused;
 	vector<Region> Regions_Inhand;
+	char getNeedDecorator();
+	void setNeedDecorator(char needDecorator);
+	bool getNeedPlayerDominationObserver();
+	bool getNeedPlayerHandsObserver();
+	bool getNeedVictoryCoinsObserver();
+	void setNeedPlayerDominationObserver(bool choice);
+	void setNeedPlayerHandsObserver(bool choice);
+	void setNeedVictoryCoinsObserver(bool choice);
+
+	PhaseObserver * phaseObserver;
+	BasicGameStatisticsObserver * basicGameStatisticsObserver;
+	PlayerDominationObserverDecorator * playerDominationObserverDecorator;
+	PlayerHandsObserverDecorator * playerHandsObserverDecorator;
+	VictoryCoinsObserverDecorator * victoryCoinsObserverDecorator;
+	
+	void notify(string x,int y);
+private:
 
 	int Tokens_Unused;
 	int Tokens_Inhand;
@@ -94,34 +119,20 @@ private:
 	int Dice_Number_Unused;
 	int Dice_Number_Inhand;
 
-	Dice dice;
-
 	string unusedRaceName;
 
 	int specialPowerToken;
 	int totalScore;
 	int test;
 	int playerIndex;
+	char needDecorator;
+	bool needPlayerDominationObserver;
+	bool needPlayerHandsObserver;
+	bool needVictoryCoinsObserver;
 
+
+	Strategy *strategy;
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif Player_h
-#pragma once

@@ -1,5 +1,4 @@
 #ifndef pieces_h
-
 #define pieces_h
 #include <string>
 using namespace std;
@@ -20,4 +19,3 @@ public:
 };
 
 #endif  pieces_h
-#pragma once

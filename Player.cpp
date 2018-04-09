@@ -6,8 +6,15 @@ using namespace std;
 Player::Player(){
 }
 
-Player::Player(int playerIndex)
-{
+Player::Player(int playerIndex,Strategy* strategy)
+{	
+	this->phaseObserver = new PhaseObserver(this,0);
+	this->basicGameStatisticsObserver = new BasicGameStatisticsObserver(this);
+	this->playerDominationObserverDecorator = new PlayerDominationObserverDecorator(this);
+	this->playerHandsObserverDecorator = new PlayerHandsObserverDecorator(this);
+	this->victoryCoinsObserverDecorator = new VictoryCoinsObserverDecorator(this);
+	this->needDecorator = 'N';
+	this->strategy = strategy;
 	this->Coins_Inhand = 5;
 	this->playerIndex = playerIndex;
 	this->specialPowerToken = 0;
@@ -16,6 +23,9 @@ Player::Player(int playerIndex)
 	this->Coins_Unused = 0;
 	this->Dice_Number_Unused = 0;
 	this->Dice_Number_Inhand = 0;
+	this->needPlayerDominationObserver = false;
+	this->needPlayerHandsObserver = false;
+	this->needVictoryCoinsObserver = false;
 }
 
 Player::~Player()
@@ -71,9 +81,14 @@ void Player::setRegions_Unused(vector<Region> regionList)
 	this->Regions_Unused = regionList;
 }
 
-void Player::setRegions_Inhand(Region region)
+void Player::setRegions_Inhand(Region& region)
 {
 	this->Regions_Inhand.push_back(region);
+}
+
+void Player::setRegions_Inhand(vector<Region> regionList)
+{
+	Regions_Inhand = regionList;
 }
 
 void Player::setSpecialPowerToken(int i)
@@ -85,17 +100,14 @@ int Player::getSpecialPowerToken()
 {
 	return specialPowerToken;
 }
-
-void Player::setDice(Dice d)
+void Player::setDice_Number_Unused(int i)
 {
-	dice = d;
+	Dice_Number_Unused = i;
 }
-
-Dice Player::getdice()
+int Player::getDice_Number_Unused()
 {
-	return dice;
+	return Dice_Number_Unused;
 }
-
 void Player::setDice_Number_Inhand(int i)
 {
 	Dice_Number_Inhand = i;
@@ -179,20 +191,28 @@ bool Player::notValidInput(int regionIndex, Map map)
 	return false;
 }
 
-void Player::conquereOthers(int regionIndex, Map & map,vector<Player>playerList)
+void Player::conquereOthers(int regionIndex, Map& map, vector<Player>& playerList)
 {
 	int returnBackToken = map.getRegion(regionIndex).getCurrentOcupiedToken() - 1;//consume 1 token if someone conquered region belonging to others.
 
-																			  /*get current player's information*/
+																				  /*get current player's information*/
 	int currentPlayer = map.regionList[regionIndex - 1].getplayerNumber();
 	string currentRace = map.regionList[regionIndex - 1].getOcupiedRace();
 	if (currentRace.compare(playerList[currentPlayer - 1].getRace_Inhand().GetRaceName()) == 0)
 	{
-		playerList[currentPlayer - 1].setTokens_Inhand(returnBackToken);//return tokens to other players. 
+		playerList[currentPlayer - 1].setTokens_Inhand(returnBackToken + playerList[currentPlayer - 1].getTokens_Inhand());//return tokens to other players. 
 		for (int i = 0; i < playerList[currentPlayer - 1].Regions_Inhand.size(); i++)
 		{
 			if (playerList[currentPlayer - 1].Regions_Inhand[i].getNodeNumber() == regionIndex) {//delete this region from previous holder's hand
-				playerList[currentPlayer - 1].Regions_Inhand.erase(playerList[currentPlayer - 1].Regions_Inhand.begin() + i + 1);//这需要debug
+				playerList[currentPlayer - 1].Regions_Inhand.erase(playerList[currentPlayer - 1].Regions_Inhand.begin() + i);
+				if (getNeedPlayerDominationObserver()) {
+					playerDominationObserverDecorator->currentPlayerIndex = this->getPlayerIndex();
+					playerDominationObserverDecorator->oponentPlayerIndex = currentPlayer;
+					playerDominationObserverDecorator->setMethod(2);
+					notify("PlayerDominationObserverDecorator", regionIndex);
+					map.notify();
+				}
+				return;
 			}
 		}
 	}
@@ -200,8 +220,138 @@ void Player::conquereOthers(int regionIndex, Map & map,vector<Player>playerList)
 		for (int i = 0; i < playerList[currentPlayer - 1].Regions_Unused.size(); i++)
 		{
 			if (playerList[currentPlayer - 1].Regions_Unused[i].getNodeNumber() == regionIndex) {//delete this region from previous holder's hand
-				playerList[currentPlayer - 1].Regions_Unused.erase(playerList[currentPlayer - 1].Regions_Unused.begin() + i + 1);//这需要debug
+				playerList[currentPlayer - 1].Regions_Unused.erase(playerList[currentPlayer - 1].Regions_Unused.begin() + i);
+				if (getNeedPlayerDominationObserver()) {
+					playerDominationObserverDecorator->currentPlayerIndex = this->getPlayerIndex();
+					playerDominationObserverDecorator->oponentPlayerIndex = currentPlayer;
+					playerDominationObserverDecorator->setMethod(2);
+					notify("PlayerDominationObserverDecorator", regionIndex);
+					map.notify();
+				}
+				return;
 			}
+		}
+		/*after all of decaded race ocupied regions has been conquered,this combo should be putted back to the box*/
+		playerList[currentPlayer - 1].setRace_Unused(NULL);
+		playerList[currentPlayer - 1].setBadges_Unused(NULL);
+		playerList[currentPlayer - 1].setUnusedRaceName("");
+	}
+}
+
+void Player::executeStrategy(vector<Player>& playerList, Map & map, int currentPlayer, int roundNumber, Race race[], Badges badges[])
+{
+	this->strategy->execute(playerList,map, currentPlayer,roundNumber,race,badges);
+}
+
+char Player::getNeedDecorator()
+{
+	return needDecorator;
+}
+
+void Player::setNeedDecorator(char needDecorator)
+{
+	this->needDecorator = needDecorator;
+}
+
+bool Player::getNeedPlayerDominationObserver()
+{
+	return needPlayerDominationObserver;
+}
+
+bool Player::getNeedPlayerHandsObserver()
+{
+	return needPlayerHandsObserver;
+}
+
+bool Player::getNeedVictoryCoinsObserver()
+{
+	return needVictoryCoinsObserver;
+}
+
+void Player::setNeedPlayerDominationObserver(bool choice)
+{
+	this->needPlayerDominationObserver = choice;
+}
+
+void Player::setNeedPlayerHandsObserver(bool choice)
+{
+	this->needPlayerHandsObserver = choice;
+}
+
+void Player::setNeedVictoryCoinsObserver(bool choice)
+{
+	this->needVictoryCoinsObserver = choice;
+}
+
+void Player::notify(string x,int y)
+{
+	if (x == "PhaseObserver") {
+			_observers[0]->update(y);
+			return;
+	}else if (x == "BasicGameStatisticsObserver") {
+		_observers[1]->update(y);
+		return;
+	}
+	if(_observers.size() >=3){//case for decorated 
+		if (x == "PlayerDominationObserverDecorator") {
+			_observers[2]->update(y);
+			return;
+		}
+		else if (x == "PlayerHandsObserverDecorator") {
+			_observers[3]->update(y);
+			return;
+		}
+		else if (x == "VictoryCoinsObserverDecorator") {
+			_observers[4]->update(y);
+			return;
+		}
+	}
+}
+
+void Player::redistribution(Map& map)
+{
+	int getTokenFromHand = this->getTokens_Inhand();
+	int getTokenFromMap = 0;
+	for (int i = 0; i < getRegions_Inhand().size(); i++)
+	{
+		getTokenFromMap += getRegions_Inhand()[i].getCurrentOcupiedToken() - 1;
+	}
+	cout << "Now you can reset tokens on the regions you have got.  " << endl;
+	int tokenCanUsedToReSet = getTokenFromHand +getTokenFromMap;
+	this->setTokens_Inhand(tokenCanUsedToReSet);
+
+
+
+
+	for (int i = 0; i < this->getRegions_Inhand().size(); i++)
+	{
+		int currentRegion = this->getRegions_Inhand()[i].getNodeNumber();
+		this->Regions_Inhand[i].setCurrentOcupiedToken(1);
+		map.regionList[currentRegion - 1].setCurrentOcupiedToken(1);
+	}
+	int numberToSetToken = 0;
+
+	while (this->getTokens_Inhand() > 0)
+	{
+		for (int i = 0; i < this->getRegions_Inhand().size(); i++)
+		{
+			cout << "Now you have " << this->getTokens_Inhand() << " tokens you can use . " << endl;
+			cout << "For region :" << (char)(getRegions_Inhand()[i].getNodeNumber() + 64) << endl;
+			cout << "Enter the token number you want to  put on it : " << endl;		
+			cin >> numberToSetToken;
+			int currentRegion = this->getRegions_Inhand()[i].getNodeNumber();
+
+			while (numberToSetToken<0 || numberToSetToken > this->getTokens_Inhand())
+			{			
+				cout << "Please enter a number between 0 and " << this->getTokens_Inhand() << endl;
+				cin >> numberToSetToken;
+			}
+			this->Regions_Inhand[i].setCurrentOcupiedToken(numberToSetToken+1);
+			map.regionList[currentRegion - 1].setCurrentOcupiedToken(numberToSetToken + 1);
+			this->setTokens_Inhand(this->getTokens_Inhand() - numberToSetToken);
+			if (this->getTokens_Inhand() == 0)
+				return;
+
 		}
 	}
 }
@@ -291,6 +441,7 @@ int Player::getCoins_Unused()
 void Player::setTotalScore(int i)
 {
 	totalScore = i;
+
 }
 
 int Player::getTotalScore()
@@ -348,9 +499,11 @@ bool Player::enableToPickRegion(Region region, int roundNumber, Map map)
 
 void Player::pick_race(Race race[], Badges badges[])
 {
-
+	phaseObserver->method = 1;
+	phaseObserver->location = 1;
+	notify("PhaseObserver", playerIndex);
 	cout << "--------------Please give the number of combo that you want  :----------------" << endl;
-	cout << endl;
+		cout << endl;
 	int n = 1;
 	cin >> n;         // let player choose a combo number;
 					  //n = 3;
@@ -359,10 +512,10 @@ void Player::pick_race(Race race[], Badges badges[])
 		cout << "--------------please give a number between 1 to 6 -------------" << endl;
 		cin >> n;
 	}
-
-	cout << "----------You have chosen :" << race[n - 1].GetRaceName() << "    " << badges[n - 1].GetBadgeName() << endl;
-	cout << "No:      Select_Coin          RaceName               BadgesName" << endl;
-	cout << endl;
+	if (getNeedPlayerHandsObserver()) {
+		notify("PlayerHandsObserverDecorator", playerIndex);
+	}
+	cout << "----------You have chosen :" << race[n - 1].GetRaceName() << "    " << badges[n - 1].GetBadgeName()<<"------------" << endl;
 
 	for (int i = 0; i < n - 1; i++)  // add coin for the combos that being skipped;
 	{
@@ -377,12 +530,12 @@ void Player::pick_race(Race race[], Badges badges[])
 		this->setTokens_Unused(this->getTokens_Inhand());
 		this->setRegions_Unused(this->getRegions_Inhand());
 		this->setCoins_Unused(this->getCoins_Inhand());
-		this->setDice_Number_Inhand(this->getDice_Number_Inhand());
+		this->setDice_Number_Unused(this->getDice_Number_Inhand());
 		this->setSpecialPowerToken(this->getSpecialPowerToken());
 		this->setUnusedRaceName(this->getRace_Unused().GetRaceName());
-		this->getRegions_Inhand().clear();
+		this->Regions_Inhand.clear();
 	}
-
+	this->setCoins_Unused(0);
 	this->setRace_Inhand(race[n - 1]);
 	this->setBadges_Inhand(badges[n - 1]);
 	this->setTokens_Inhand(this->getBadges_Inhand().GetBadgesTokens() + this->getRace_Inhand().GetRaceTokens());
@@ -405,24 +558,30 @@ void Player::pick_race(Race race[], Badges badges[])
 		badges[i - 1] = badges[i];
 	}
 	badges[19] = Badges();    // change the last one of the race[] into default value;
+	
+	
+	
 	cout << "Here are information for player" << this->getPlayerIndex() << ": " << endl;
 	this->display();
+
 	cout << endl;
 	cout << "Here are combos of races and bagdges left after player " << this->getPlayerIndex() << " picked :" << endl;
 	for (int i = 0; i < 6; i++)	// print the sequence after shuffle;
 	{
-		cout << i + 1 << "        " << race[i].GetSelect_Coin() << "       " << race[i].GetRaceName() << "                 " << badges[i].GetBadgeName() << endl;
-
+		cout << "combo " << i + 1 << "     Select_Coin: " << race[i].GetSelect_Coin() << ".  RaceName:  " << race[i].GetRaceName() << ".  RaceToken: " << race[i].GetRaceTokens() << ".  BadgesName:  " << badges[i].GetBadgeName() << ".  BadgeToken:  " << badges[i].GetBadgesTokens() << endl;
 	}
 	cout << endl;
 	cout << endl;
-
+	phaseObserver->method = 1;
+	phaseObserver->location = 2;
+	notify("PhaseObserver", playerIndex);
 }
-void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
+void Player::conquers(Map& map, int roundNumber, vector<Player>& playerList)
 {	
-
+	phaseObserver->method = 2;
+	phaseObserver->location = 1;
+	notify("PhaseObserver", playerIndex);
 	int subRoundCouter = 1;//subround for each player
-	cout << "---------Player [ " << this->getPlayerIndex() <<  "]'s turn to conquers:   ------------------" << endl;
 	map.drawMap();
 	map.displayRegionList();
 	this->display();
@@ -438,7 +597,7 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 			int regionIndex;
 			do {
 				needReEnter = false;
-				if (subRoundCouter == 1 && this->Regions_Inhand.size() == 0 && this->Regions_Unused.size() == 0) {
+				if (subRoundCouter == 1 && roundNumber == 1) {
 					cout << "--------Because this is you fist time to choose a Region, you can only choose from 'edge region list' : " << endl;
 					cout << " [ ";
 					for (int i = 0; i < map.getEdgeRegions().size(); i++)
@@ -453,7 +612,7 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 				regionIndex = (int)regionNumber - 64;
 				needReEnter = notValidInput(regionIndex, map);
 				if (!needReEnter) {
-					if (subRoundCouter == 1) {
+					if (subRoundCouter == 1 && roundNumber == 1) {
 						needReEnter = notOnTheEdges(regionNumber, map);
 					}
 					if (!needReEnter) {
@@ -479,6 +638,10 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 					needReEnter = false;
 					cout << "Please enter the number of tokens you want to use to conquere this region:" << endl;
 					cin >> tokenUse;
+					if (tokenUse > this->getTokens_Inhand()) {
+						cout << "You do not have enough tokens,try again" << endl;
+						needReEnter = true;
+					}
 					if (map.getRegion(regionIndex).getplayerNumber() == 0) {
 						tokenNeed = map.getRegion(regionIndex).getTokenNeeded() - this->getSpecialPowerToken();
 						if (tokenUse < tokenNeed) {
@@ -501,15 +664,18 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 
 				this->setTokens_Inhand(this->getTokens_Inhand() - tokenUse);//consume tokens in hand to conquere this region
 				this->setSpecialPowerToken(0);
+
 				/*update map*/
 				map.regionList[regionIndex - 1].setplayerNumber(this->getPlayerIndex());
 				map.regionList[regionIndex - 1].setCurrentOcupiedToken(tokenUse);
 				map.regionList[regionIndex - 1].setOcupiedRace(this->getRace_Inhand().GetRaceName());
 				this->setRegions_Inhand(map.getRegion(regionIndex));	//put this region into this player's region list;
-				
-				cout << "-----------You have conquered the following region :---------- " << endl;
-				cout << endl;
-				map.getRegion(regionIndex).display();
+				if (getNeedPlayerDominationObserver() && playerDominationObserverDecorator->getMethod() != 2) {
+					playerDominationObserverDecorator->currentPlayerIndex = this->getPlayerIndex();
+					playerDominationObserverDecorator->setMethod(1);
+					notify("PlayerDominationObserverDecorator", regionIndex);
+					map.notify();
+				}
 			}
 			/*not sufficient token to conquere this region*/
 			else
@@ -518,6 +684,7 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 				char chooseDice;
 				cin >> chooseDice;
 				if (chooseDice == 'Y') {
+					Dice dice;
 					dice.Roll();
 					dice.Display();
 					int tokenHold = this->getTokens_Inhand();
@@ -535,10 +702,13 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 						map.regionList[regionIndex - 1].setCurrentOcupiedToken(tokenHold);
 						map.regionList[regionIndex - 1].setOcupiedRace(this->getRace_Inhand().GetRaceName());
 						this->setRegions_Inhand(map.getRegion(regionIndex));	//put this region into this player's region list;
-
-						cout << "-----------You have conquered the following region :---------- " << endl;
-						cout << endl;
-						map.getRegion(regionIndex).display();
+						
+						if (getNeedPlayerDominationObserver()&& playerDominationObserverDecorator->getMethod() != 2) {
+							playerDominationObserverDecorator->currentPlayerIndex = this->getPlayerIndex();
+							playerDominationObserverDecorator->setMethod(1);
+							notify("PlayerDominationObserverDecorator", regionIndex);
+							map.notify();
+						}
 						keepGoing = false;
 					}
 					else {
@@ -555,17 +725,20 @@ void Player::conquers(Map& map, int roundNumber, vector<Player> playerList)
 		}
 		/*Redistribution*/
 		if (!keepGoing) {
-		cout << endl;
-		cout << "Round " << roundNumber + 1 << " for player " << getPlayerIndex() << " finished" << endl;
-		cout << endl;
+			phaseObserver->method = 2;
+			phaseObserver->location = 2;
+			notify("PhaseObserver", playerIndex);
 		}
 	}while (keepGoing);
+	redistribution(map);
 }
  
 void Player::scores()
 {
+	phaseObserver->method = 3;
+	phaseObserver->location = 1;
+	notify("PhaseObserver",playerIndex);
 	int coin = 0;
-	//this->totalScore += score;
 
 	for (int i = 0; i < this->getRegions_Inhand().size(); i++)
 	{
@@ -605,4 +778,12 @@ void Player::scores()
 
 	}
 	this->setTotalScore(coin + this->getCoins_Inhand() + this->getCoins_Unused());
+	if (getNeedVictoryCoinsObserver()) {
+		victoryCoinsObserverDecorator->setPlayerIndex(this->getPlayerIndex());
+		notify("VictoryCoinsObserverDecorator", coin + this->getCoins_Inhand() + this->getCoins_Unused());
+	}
+
+	phaseObserver->method = 3;
+	phaseObserver->location = 2;
+	notify("PhaseObserver", playerIndex);
 }

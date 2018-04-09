@@ -24,4 +24,3 @@ public:
 
 
 #endif  Dice_h
-#pragma once
