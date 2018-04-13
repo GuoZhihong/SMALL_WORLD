@@ -4,7 +4,6 @@ void AggressivePlayer::execute(vector<Player>& playerList, Map& map, int current
 {	
 	playerList[currentPlayer - 1].notify("BasicGameStatisticsObserver", roundNumber);
 	if (roundNumber == 1) {
-		//cout << "player " << playerList[currentPlayer - 1].getPlayerIndex() << " picks race and badge:" << endl;
 		this->pick_race(race, badges,playerList,currentPlayer);
 	}
 	else {
@@ -44,7 +43,25 @@ void AggressivePlayer::pick_race(Race race[], Badges badges[], vector<Player>& p
 	bool count;
 	do {
 		count = true;
-		cin >> n;         // let player choose a combo number;
+		bool validNumber = false;
+		while (!validNumber) {
+			try {
+				cin >> n;   // let player choose a combo number;
+
+				if (cin.fail()) {//check if user input is an integer;
+					cin.clear();
+					cin.ignore();
+					throw domain_error("Not an integer,Please enter again: ");
+				}
+				if (n > 6 || n < 1) {  //check if user inpu between 1-6 ;
+					throw domain_error("Invaild input. Please enter again:");
+				}
+				validNumber = true;
+			}
+			catch (exception& e) {
+				cout << "Standard exception: " << e.what() << endl;
+			}
+		}
 		for (int i = 0; i < maxCombo.size(); i++)
 		{
 			if (n == maxCombo[i]) {
@@ -155,7 +172,25 @@ void AggressivePlayer::conquers(Map& map, int roundNumber, vector<Player>& playe
 					cout << " ]" << endl;
 				}
 				cout << "-----------Please choose the Region that you want :   ----------------------" << endl;
-				cin >> regionNumber;
+				bool validNumber = false;
+				while (!validNumber) {
+					try {
+						cin >> regionNumber;
+
+						if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+						}
+						if (regionNumber < 1) {  //check if user inpu between 2-5 ;
+							throw domain_error("Invaild input. Please enter again:");
+						}
+						validNumber = true;
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+				}
 				cout << endl;
 				regionIndex = (int)regionNumber - 64;
 				needReEnter = notValidInput(regionIndex, map);
@@ -181,11 +216,29 @@ void AggressivePlayer::conquers(Map& map, int roundNumber, vector<Player>& playe
 			/*there are sufficient tokens to conquere this region :*/
 			if (playerList[currentPlayer - 1].enableToPickRegion(map.getRegion(regionIndex), roundNumber, map)) {
 				int tokenNeed = 0;
-				int tokenUse;
+				int tokenUse=0;
 				do {
 					needReEnter = false;
 					cout << "Please enter the number of tokens you want to use to conquere this region:" << endl;
-					cin >> tokenUse;
+					
+					bool validNumber = false;
+					while (!validNumber) {
+						try {
+							cin >> tokenUse;			
+							if (cin.fail()) {//check if user input is an integer;
+								cin.clear();
+								cin.ignore();
+								throw domain_error("Not an integer,Please enter again: ");
+							}
+							if ( tokenUse < 1) {  //check if the input is valid;
+								throw domain_error("Invaild input. Please enter again:");
+							}
+							validNumber = true;
+						}
+						catch (exception& e) {
+							cout << "Standard exception: " << e.what() << endl;
+						}
+					}
 					if (tokenUse > playerList[currentPlayer - 1].getTokens_Inhand()) {
 						cout << "You do not have enough tokens,try again" << endl;
 						needReEnter = true;
@@ -230,7 +283,21 @@ void AggressivePlayer::conquers(Map& map, int roundNumber, vector<Player>& playe
 			{
 				cout << "The tokens in your hand is not sufficient to conquere this region,please enter Y/N to choose to roll a dice or not" << endl;
 				char chooseDice;
-				cin >> chooseDice;
+			
+				bool validNumber = false;
+				while (!validNumber) {
+					try {
+						cin >> chooseDice;
+						if (chooseDice != 'Y' && chooseDice != 'N') {  //check if the input is valid;
+							
+							throw domain_error("Invaild input. Please enter again:(Y or N)");
+						}
+						validNumber = true;
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+				}
 				if (chooseDice == 'Y') {
 					Dice dice;
 					dice.Roll();
@@ -282,6 +349,9 @@ void AggressivePlayer::conquers(Map& map, int roundNumber, vector<Player>& playe
 }
 void AggressivePlayer::redistribution(Map& map, vector<Player>& playerList, int currentPlayer)
 {
+	if (playerList[currentPlayer - 1].getRegions_Inhand().size() == 0) {
+		return;
+	}
 	int getTokenFromHand = playerList[currentPlayer - 1].getTokens_Inhand();
 	int getTokenFromMap = 0;
 	for (int i = 0; i < playerList[currentPlayer - 1].getRegions_Inhand().size(); i++)

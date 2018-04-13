@@ -55,6 +55,9 @@ void Player::display()
 	cout << "The Badges_Inhand is : " << this->getBadges_Inhand().GetBadgeName()<< endl;
 	cout << "The Coins_Unused is : " << Coins_Unused << endl;
 	cout << "The Coins_Inhand is : " << Coins_Inhand << endl;
+	cout << "The SpecialPowerToken is : " << specialPowerToken << endl;
+	cout << "The CoinPower is : " << coinPower << endl;
+	cout << "The TokenPower is : " << tokenPower << endl;
 
 }
 
@@ -99,6 +102,22 @@ void Player::setSpecialPowerToken(int i)
 int Player::getSpecialPowerToken()
 {
 	return specialPowerToken;
+}
+void Player::setCoinPower(string s)
+{
+	coinPower = s;
+}
+string Player::getCoinPower()
+{
+	return coinPower;
+}
+void Player::setTokenPower(string s)
+{
+	tokenPower = s;
+}
+string Player::getTokenPower()
+{
+	return tokenPower;
 }
 void Player::setDice_Number_Unused(int i)
 {
@@ -175,7 +194,7 @@ bool Player::belongItself(int regionIndex)
 
 bool Player::isWaterRegion(int regionIndex, Map& map)
 {
-	if (map.regionList[regionIndex - 1].getRegionTpye()._Equal("water")) {
+	if (map.regionList[regionIndex - 1].getRegionTpye().compare("water")==0) {
 		cout << "The region you choose cannot be conquered" << endl;
 		return true;
 	}
@@ -231,10 +250,12 @@ void Player::conquereOthers(int regionIndex, Map& map, vector<Player>& playerLis
 				return;
 			}
 		}
-		/*after all of decaded race ocupied regions has been conquered,this combo should be putted back to the box*/
-		playerList[currentPlayer - 1].setRace_Unused(NULL);
-		playerList[currentPlayer - 1].setBadges_Unused(NULL);
-		playerList[currentPlayer - 1].setUnusedRaceName("");
+		if (playerList[currentPlayer - 1].Regions_Unused.size() == 0) {
+			/*after all of decaded race ocupied regions has been conquered,this combo should be putted back to the box*/
+			playerList[currentPlayer - 1].setRace_Unused(NULL);
+			playerList[currentPlayer - 1].setBadges_Unused(NULL);
+			playerList[currentPlayer - 1].setUnusedRaceName("");
+		}
 	}
 }
 
@@ -310,6 +331,9 @@ void Player::notify(string x,int y)
 
 void Player::redistribution(Map& map)
 {
+	if (this->getRegions_Inhand().size() == 0) {
+		return;
+	}
 	int getTokenFromHand = this->getTokens_Inhand();
 	int getTokenFromMap = 0;
 	for (int i = 0; i < getRegions_Inhand().size(); i++)
@@ -338,13 +362,25 @@ void Player::redistribution(Map& map)
 			cout << "Now you have " << this->getTokens_Inhand() << " tokens you can use . " << endl;
 			cout << "For region :" << (char)(getRegions_Inhand()[i].getNodeNumber() + 64) << endl;
 			cout << "Enter the token number you want to  put on it : " << endl;		
-			cin >> numberToSetToken;
 			int currentRegion = this->getRegions_Inhand()[i].getNodeNumber();
+			bool validNumber = false;
+			while (!validNumber) {
+				try {
+					cin >> numberToSetToken;
 
-			while (numberToSetToken<0 || numberToSetToken > this->getTokens_Inhand())
-			{			
-				cout << "Please enter a number between 0 and " << this->getTokens_Inhand() << endl;
-				cin >> numberToSetToken;
+					if (cin.fail()) {//check if user input is an integer;
+						cin.clear();
+						cin.ignore();
+						throw domain_error("Not an integer,Please enter again: ");
+					}
+					if (numberToSetToken > this->getTokens_Inhand() || numberToSetToken < 0) {  //check if the input is valid;
+						throw domain_error("Invaild input. Please enter again:");
+					}
+					validNumber = true;
+				}
+				catch (exception& e) {
+					cout << "Standard exception: " << e.what() << endl;
+				}
 			}
 			this->Regions_Inhand[i].setCurrentOcupiedToken(numberToSetToken+1);
 			map.regionList[currentRegion - 1].setCurrentOcupiedToken(numberToSetToken + 1);
@@ -452,12 +488,16 @@ int Player::getTotalScore()
 bool Player::enableToPickRegion(Region region, int roundNumber, Map map)
 {
 
-	/*这有问题 需要研究规则再回来*/
 	/* Check if player's race has power that can reduce token cost at a special region shape */
 
 	if (this->getRace_Inhand().getTokenPower().compare(region.getRegionTpye()) == 0)
 	{
 		this->setSpecialPowerToken(this->getSpecialPowerToken() + 1);
+		/*Amazons special power---*/
+		if (this->getRace_Inhand().GetRaceName().compare("Amazons"))
+		{
+			this->setSpecialPowerToken(this->getSpecialPowerToken() + this->getRace_Inhand().getSpecialTokenNumber());
+		}
 	}
 	/* Check if player's badge has power that can reduce token cost at a special region shape */
 
@@ -476,9 +516,11 @@ bool Player::enableToPickRegion(Region region, int roundNumber, Map map)
 	}
 
 	/*determine if  enpty regions can be conquered or not*/
+
 	int totalToken = this->getTokens_Inhand() + this->getSpecialPowerToken() + this->getDice_Number_Inhand();
 	if (region.getplayerNumber() == 0)
 	{
+		
 		if (totalToken >= region.getTokenNeeded()) {
 			return true;
 		}
@@ -488,7 +530,8 @@ bool Player::enableToPickRegion(Region region, int roundNumber, Map map)
 	}
 	/*if this region belongs to another player, check whether player's token is enough */
 	else {
-		if (totalToken >= region.getCurrentOcupiedToken()) {
+		
+		if (totalToken >= max(region.getCurrentOcupiedToken(),region.getTokenNeeded())) {
 			return true;
 		}
 		else {
@@ -505,13 +548,26 @@ void Player::pick_race(Race race[], Badges badges[])
 	cout << "--------------Please give the number of combo that you want  :----------------" << endl;
 		cout << endl;
 	int n = 1;
-	cin >> n;         // let player choose a combo number;
-					  //n = 3;
-	while (n < 1 || n>6)
-	{
-		cout << "--------------please give a number between 1 to 6 -------------" << endl;
-		cin >> n;
+	bool validNumber = false;
+	while (!validNumber) {
+		try {
+			cin >> n;   // let player choose a combo number;
+
+			if (cin.fail()) {//check if user input is an integer;
+				cin.clear();
+				cin.ignore();
+				throw domain_error("Not an integer,Please enter again: ");
+			}
+			if (n > 6 || n < 1) {  //check if user inpu between 1-6 ;
+				throw domain_error("Invaild input. Please enter again:");
+			}
+			validNumber = true;
+		}
+		catch (exception& e) {
+			cout << "Standard exception: " << e.what() << endl;
+		}
 	}
+  
 	if (getNeedPlayerHandsObserver()) {
 		notify("PlayerHandsObserverDecorator", playerIndex);
 	}
@@ -607,7 +663,26 @@ void Player::conquers(Map& map, int roundNumber, vector<Player>& playerList)
 					cout << " ]" << endl;
 				}
 				cout << "-----------Please choose the Region that you want :   ----------------------" << endl;
-				cin >> regionNumber;
+				
+				bool validNumber = false;
+				while (!validNumber) {
+					try {
+						cin >> regionNumber;
+
+						if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+						}
+						if (regionNumber < 1) {  //check if user inpu between 2-5 ;
+							throw domain_error("Invaild input. Please enter again:");
+						}
+						validNumber = true;
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+				}
 				cout << endl;
 				regionIndex = (int)regionNumber - 64;
 				needReEnter = notValidInput(regionIndex, map);
@@ -637,7 +712,25 @@ void Player::conquers(Map& map, int roundNumber, vector<Player>& playerList)
 				do {
 					needReEnter = false;
 					cout << "Please enter the number of tokens you want to use to conquere this region:" << endl;
-					cin >> tokenUse;
+					bool validNumber = false;
+					while (!validNumber) {
+						try {
+							cin >> tokenUse;
+
+							if (cin.fail()) {//check if user input is an integer;
+								cin.clear();
+								cin.ignore();
+								throw domain_error("Not an integer,Please enter again: ");
+							}
+							if (tokenUse > this->getTokens_Inhand() || tokenUse < 1) {  //check if the input is valid;
+								throw domain_error("Invaild input. Please enter again:");
+							}
+							validNumber = true;
+						}
+						catch (exception& e) {
+							cout << "Standard exception: " << e.what() << endl;
+						}
+					}
 					if (tokenUse > this->getTokens_Inhand()) {
 						cout << "You do not have enough tokens,try again" << endl;
 						needReEnter = true;
@@ -682,7 +775,20 @@ void Player::conquers(Map& map, int roundNumber, vector<Player>& playerList)
 			{
 				cout << "The tokens in your hand is not sufficient to conquere this region,please enter Y/N to choose to roll a dice or not" << endl;
 				char chooseDice;
-				cin >> chooseDice;
+				bool validNumber = false;
+				while (!validNumber) {
+					try {
+						cin >> chooseDice;
+						if (chooseDice != 'Y' && chooseDice != 'N') {  //check if the input is valid;
+
+							throw domain_error("Invaild input. Please enter again:(Y or N)");
+						}
+						validNumber = true;
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+				}
 				if (chooseDice == 'Y') {
 					Dice dice;
 					dice.Roll();
@@ -723,7 +829,6 @@ void Player::conquers(Map& map, int roundNumber, vector<Player>& playerList)
 			subRoundCouter++;
 			this->display();
 		}
-		/*Redistribution*/
 		if (!keepGoing) {
 			phaseObserver->method = 2;
 			phaseObserver->location = 2;
@@ -742,6 +847,12 @@ void Player::scores()
 
 	for (int i = 0; i < this->getRegions_Inhand().size(); i++)
 	{
+		/*"Merchant" badge special power ----*/
+		if (this->getBadges_Inhand().GetBadgeName().compare("Merchant"))
+		{
+			coin++;
+		}
+
 		if (this->getRace_Inhand().getCoinPower().compare(this->getRegions_Inhand()[i].getRegionTpye()) == 0)
 		{
 			coin = coin + 2;
@@ -777,6 +888,15 @@ void Player::scores()
 		}
 
 	}
+	if (this->getBadges_Inhand().GetBadgeName().compare("Alchemist") || this->getBadges_Unused().GetBadgeName().compare("Alchemist"))
+	{
+		coin = coin + 2;
+	}
+	if (this->getBadges_Inhand().GetBadgeName().compare("Fortified") || this->getBadges_Unused().GetBadgeName().compare("Fortified"))
+	{
+		coin++;
+	}
+
 	this->setTotalScore(coin + this->getCoins_Inhand() + this->getCoins_Unused());
 	if (getNeedVictoryCoinsObserver()) {
 		victoryCoinsObserverDecorator->setPlayerIndex(this->getPlayerIndex());

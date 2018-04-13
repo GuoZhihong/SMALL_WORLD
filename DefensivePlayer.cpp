@@ -4,15 +4,26 @@ void DefensivePlayer::execute(vector<Player>& playerList, Map& map, int currentP
 {
 	playerList[currentPlayer - 1].notify("BasicGameStatisticsObserver", roundNumber);
 	if (roundNumber == 1) {
-		//cout << "player " << playerList[currentPlayer - 1].getPlayerIndex() << " picks race and badge:" << endl;
-		//playerList[currentPlayer - 1].notify();
 		playerList[currentPlayer - 1].pick_race(race, badges);
 	}
 	else {
 		this->redistribution2(map, playerList, currentPlayer);
 		cout << "player " << playerList[currentPlayer - 1].getPlayerIndex() << " as a Defensive player: please enter Y/N to choose a new race and special power combo:" << endl;
 		char choosenewrace;
-		cin >> choosenewrace;
+		bool validNumber = false;
+		while (!validNumber) {
+			try {
+				cin >> choosenewrace;
+				if (choosenewrace != 'Y' && choosenewrace != 'N') {  //check if the input is valid;
+
+					throw domain_error("Invaild input. Please enter again:(Y or N)");
+				}
+				validNumber = true;
+			}
+			catch (exception& e) {
+				cout << "Standard exception: " << e.what() << endl;
+			}
+		}
 		if (choosenewrace == 'Y') {
 			//cout << "player " << playerList[currentPlayer - 1].getPlayerIndex() << " picks race and badge:" << endl;
 			playerList[currentPlayer - 1].pick_race(race, badges);
@@ -52,7 +63,25 @@ void DefensivePlayer::conquers(Map& map, int roundNumber, vector<Player>& player
 					cout << " ]" << endl;
 				}
 				cout << "-----------Please choose the Region that you want :   ----------------------" << endl;
-				cin >> regionNumber;
+				bool validNumber = false;
+				while (!validNumber) {
+					try {
+						cin >> regionNumber;
+
+						if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+						}
+						if (regionNumber < 1) {  ;
+							throw domain_error("Invaild input. Please enter again:");
+						}
+						validNumber = true;
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+				}
 				cout << endl;
 				regionIndex = (int)regionNumber - 64;
 				needReEnter = notValidInput(regionIndex, map);
@@ -82,7 +111,25 @@ void DefensivePlayer::conquers(Map& map, int roundNumber, vector<Player>& player
 				do {
 					needReEnter = false;
 					cout << "As a defensive player,each region that you want must have at least 3 tokens on it,please enter the number of tokens you want to use to conquere this region:" << endl;
-					cin >> tokenUse;
+					bool validNumber = false;
+					while (!validNumber) {
+						try {
+							cin >> tokenUse;
+
+							if (cin.fail()) {//check if user input is an integer;
+								cin.clear();
+								cin.ignore();
+								throw domain_error("Not an integer,Please enter again: ");
+							}
+							if (tokenUse < 1) {  //check if the input is valid;
+								throw domain_error("Invaild input. Please enter again:");
+							}
+							validNumber = true;
+						}
+						catch (exception& e) {
+							cout << "Standard exception: " << e.what() << endl;
+						}
+					}
 					if (tokenUse < 3) {
 						needReEnter = true;
 						cout << "You must have at least 3 tokens!" << endl;
@@ -146,6 +193,11 @@ void DefensivePlayer::conquers(Map& map, int roundNumber, vector<Player>& player
 }
 void DefensivePlayer::redistribution1(Map& map, vector<Player>& playerList, int currentPlayer)
 {
+
+	if (playerList[currentPlayer - 1].getRegions_Inhand().size() == 0) {
+		return;
+	}
+
 	int getTokenFromHand = playerList[currentPlayer - 1].getTokens_Inhand();
 	int getTokenFromMap = 0;
 	for (int i = 0; i < playerList[currentPlayer - 1].getRegions_Inhand().size(); i++)
@@ -172,15 +224,28 @@ void DefensivePlayer::redistribution1(Map& map, vector<Player>& playerList, int 
 		{
 			cout << "Now you have " << playerList[currentPlayer - 1].getTokens_Inhand() << " tokens you can use . " << endl;
 			cout << "For region :" << (char)(playerList[currentPlayer - 1].getRegions_Inhand()[i].getNodeNumber() + 64) << endl;
-			cout << "Enter the token number you want to  put on it : " << endl;
-			cin >> numberToSetToken;
+			cout << "Enter the token number you want to  put on it " << endl;
 			int currentRegion = playerList[currentPlayer - 1].getRegions_Inhand()[i].getNodeNumber();
+			bool validNumber = false;
+			while (!validNumber) {
+				try {
+					cin >> numberToSetToken;
 
-			while (numberToSetToken< 0 || numberToSetToken > playerList[currentPlayer - 1].getTokens_Inhand())
-			{
-				cout << "Please enter a number between 0 and " << playerList[currentPlayer - 1].getTokens_Inhand() << endl;
-				cin >> numberToSetToken;
+					if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+					}
+					if (numberToSetToken > playerList[currentPlayer - 1].getTokens_Inhand() || numberToSetToken < 0) {  //check if the input is valid;
+						throw domain_error("Invaild input. Please enter again:");
+					}
+					validNumber = true;
+				}
+				catch (exception& e) {
+					cout << "Standard exception: " << e.what() << endl;
+				}
 			}
+			
 			playerList[currentPlayer - 1].Regions_Inhand[i].setCurrentOcupiedToken(numberToSetToken + 3);
 			map.regionList[currentRegion - 1].setCurrentOcupiedToken(numberToSetToken + 3);
 			playerList[currentPlayer - 1].setTokens_Inhand(playerList[currentPlayer - 1].getTokens_Inhand() - numberToSetToken);
@@ -192,6 +257,9 @@ void DefensivePlayer::redistribution1(Map& map, vector<Player>& playerList, int 
 }
 void DefensivePlayer::redistribution2(Map& map, vector<Player>& playerList, int currentPlayer)
 {
+	if (playerList[currentPlayer - 1].getRegions_Inhand().size() == 0) {
+		return;
+	}
 	int getTokenFromHand = playerList[currentPlayer - 1].getTokens_Inhand();
 	int getTokenFromMap = 0;
 	for (int i = 0; i < playerList[currentPlayer - 1].getRegions_Inhand().size(); i++)

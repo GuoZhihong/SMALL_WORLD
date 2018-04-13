@@ -72,21 +72,10 @@ string Region::getOcupiedRace()
 void Region::display()
 {
 	vector<int>::iterator itera;
-	if (getNodeNumber() <= 26) {
-		cout << "Region number: " << (char)(getNodeNumber() + 64) << ".  " << " Belongs: " << getplayerNumber() << " . " << " Region type: " << getRegionTpye() << " . " << "CurrentOcupiedToken: " << getCurrentOcupiedToken() <<"  "<< "TokenNeeded: " << getTokenNeeded() << "  "<<"OcupiedRace: " << getOcupiedRace() << " . ";
-		cout<< " Adjacent regions : ";
-
-	}
-	else {
-		cout << "Region number: " << (char)(getNodeNumber() + 70) << ".  " << " Belongs: " << getplayerNumber() << ". " << " Region type: " << getRegionTpye() << ". " << " Adjacent regions : ";
-	}
+	cout << "Region number: " << (char)(getNodeNumber() + 64) << ".  " << " Belongs: " << getplayerNumber() << " . " << " Region type: " << getRegionTpye() << " . " << "CurrentOcupiedToken: " << getCurrentOcupiedToken() << "  " << "TokenNeeded: " << getTokenNeeded() << "  " << "OcupiedRace: " << getOcupiedRace() << " . ";
+	cout << " Adjacent regions : ";
 	for (itera = adjacentNodes.begin(); itera != adjacentNodes.end(); itera++) {
-		if (getNodeNumber() <= 26) {
-			cout << (char)(*itera+64) << " ";
-		}
-		else {
-			cout << (char)(*itera+70) << " ";
-		}
+		cout << (char)(*itera + 64)<<" ";
 	}
 	cout<<". ";
 	if (specialRegion.size() != 0) {

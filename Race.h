@@ -11,8 +11,9 @@ private:
 	int Number;
 	int Select_Coin=0;
 
-	string coinPower;
-	string tokenPower;
+	string coinPower="Null";
+	string tokenPower="Null";
+	int specialTokenNumber=0;
 
 public:
 	Race();
@@ -22,6 +23,8 @@ public:
 	void display();
 	 
 	string GetRaceName();
+	void setSpecialTokenNumber(int i);
+	int getSpecialTokenNumber();
 	
 	void SetSelect_Coin(int i);
 

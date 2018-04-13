@@ -15,7 +15,13 @@
 #include"VictoryCoinsObserverDecorator.h"
 #include"PlayerHandsObserverDecorator.h"
 #include"BasicGameStatisticsObserver.h"
+#include<ctime>
+#include<cstdlib>
+#include <exception>
 using namespace std;
+
+
+
 Race race[14];			// create an array to store 14 races;
 Badges badges[20];		// create an array to store 20 badges;
 void shuffleCardAndDisplay() {
@@ -59,7 +65,20 @@ bool needDecorator(int i,Player* player) {
 		
 		cout << "please specify if you want Observer Decorators or not by Y/N" << endl;
 		char needDecorator;
-		cin >> needDecorator;
+		bool validNumber = false;
+		while (!validNumber) {
+			try {
+				cin >> needDecorator;
+				if (needDecorator != 'Y'&& needDecorator != 'N') {  //check if the input is valid;
+					cout << needDecorator << endl;
+					throw domain_error("Invaild input. Please enter again:(Y or N)");
+				}
+				validNumber = true;
+			}
+			catch (exception& e) {
+				cout << "Standard exception: " << e.what() << endl;
+			}
+		}
 		if (needDecorator == 'Y') {
 			player->setNeedDecorator('Y');
 			return true;
@@ -88,14 +107,32 @@ bool hasDecorator(Player player) {
 }
 /*Game logic*/
 int main() {
+
 	cout << "Welcome to Small world" << endl;
 	string fileName; 
 	
 	//create player list
 	int playerNumber;;
 	cout << "Please choose the number of players:" << endl;
-	cin >> playerNumber;
+	bool validNumber = false;
+	while (!validNumber) {
+		try {
+			cin >> playerNumber;
 
+			if (cin.fail()) {//check if user input is an integer;
+				cin.clear();
+				cin.ignore();
+				throw domain_error("Not an integer,Please enter again: ");
+			}
+			if (playerNumber > 5 || playerNumber < 2) {  //check if user inpu between 2-5 ;
+				throw domain_error("Invaild input. Please enter again:");
+			}
+			validNumber = true;
+		}
+		catch (exception& e) {
+			cout << "Standard exception: " << e.what() << endl;
+		}
+	}
 	switch (playerNumber)
 	{
 	case 2:
@@ -142,7 +179,25 @@ int main() {
 		cout << "(2) A defensive player" << endl;
 		cout << "(3) A moderate player" << endl;
 		cout << "(4) A random player" << endl;
-		cin >> playerType;
+		validNumber = false;
+		while (!validNumber) {
+			try {
+				cin >> playerType;
+
+				if (cin.fail()) {//check if user input is an integer;
+					cin.clear();
+					cin.ignore();
+					throw domain_error("Not an integer,Please enter again: ");
+				}
+				if (playerType > 4 || playerType < 1) {  //check if user inpu between 1-4 ;
+					throw domain_error("Invaild input. Please enter again:");
+				}
+				validNumber = true;
+			}
+			catch (exception& e) {
+				cout << "Standard exception: " << e.what() << endl;
+			}
+		}
 		Player player;
 		switch (playerType)
 		{
@@ -200,7 +255,20 @@ int main() {
 					cout << "2.Player Hands Observer Decorator" << endl;
 					cout << "3.Victory Coins Observer Decorator" << endl;
 					int decoratorChoice;
-					cin >> decoratorChoice;
+					try {
+						cin >> decoratorChoice;
+						if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+						}
+						if (decoratorChoice > 3 || decoratorChoice < 0) {  //check if user input between 0-3 ;
+							throw domain_error("Invaild input. Please enter again:");
+						}
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
 					switch (decoratorChoice)
 					{
 					case 0:
@@ -244,7 +312,21 @@ int main() {
 					cout << "2.Player Hands Observer Decorator" << endl;
 					cout << "3.Victory Coins Observer Decorator" << endl;
 					int decoratorChoice;
-					cin >> decoratorChoice;
+					try {
+						cin >> decoratorChoice;
+						if (cin.fail()) {//check if user input is an integer;
+							cin.clear();
+							cin.ignore();
+							throw domain_error("Not an integer,Please enter again: ");
+						}
+						if (decoratorChoice > 3 || decoratorChoice < 0) {  //check if user input between 1-3 ;
+							throw domain_error("Invaild input. Please enter again:");
+						}
+					}
+					catch (exception& e) {
+						cout << "Standard exception: " << e.what() << endl;
+					}
+					
 					switch (decoratorChoice)
 					{
 					case 0:

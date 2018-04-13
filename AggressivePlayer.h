@@ -5,8 +5,6 @@
 class AggressivePlayer:public Strategy,Player
 {
 public:
-	//AggressivePlayer();
-	//~AggressivePlayer();
 	void execute(vector<Player>& playerList,Map& map,int currentPlayer,int roundNumber, Race race[], Badges badges[]);
 	void pick_race(Race race[], Badges badges[], vector<Player>& playerList, int currentPlayer);
 	void conquers(Map& map, int roundNumber, vector<Player>& playerList, int currentPlayer);

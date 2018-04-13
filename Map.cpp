@@ -8,13 +8,13 @@ Map::Map(int M,int N,int playerNumber)
 		edgeRegions = {'B','C','D','H','I','L','W','V','T','R','Q','K','E','O'};
 	}
 	else if (playerNumber == 3) {
-
+		edgeRegions = {'B','C','D','\\','[',']','E','G','I','K','L','X','U','R','O','N','M'};
 	}
 	else if (playerNumber == 4) {
-
+		edgeRegions = {'B','C','D','E','F','G','H','U','W','_','^',']','\\','[','Y','T','S','N','M','L','I'};
 	}
 	else {
-
+		edgeRegions = {'B','h','N','O','P','j','H','k','~','^','a','c','f','o','n','m','Y','X','V','L','G','F','E','D','C'};
 	}
 	setupMatrix();
 }
@@ -98,12 +98,7 @@ void Map::setupRegions(void)
 			cout << "Invalid node " << node << " ,out of map range,so do nothing." << endl;
 			return;
 		}
-		if (node <= 26) {
-			coordinates[y][x] = node + 64;//ASCII code
-		}
-		else {
-			coordinates[y][x] = node + 70;
-		}
+		coordinates[y][x] = node + 64;//ASCII code
 		setAdjacentNodes(node, adjacentNodes);
 	}
 }

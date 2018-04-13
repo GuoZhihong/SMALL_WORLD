@@ -16,6 +16,16 @@ using namespace std;
 		return RaceName;
 	}
 
+	void Race::setSpecialTokenNumber(int i)
+	{
+		specialTokenNumber = i;
+	}
+
+	int Race::getSpecialTokenNumber()
+	{
+		return specialTokenNumber;
+	}
+
 	void Race::setCoinPower(string cpower)
 	{
 		this->coinPower = cpower;
@@ -58,10 +68,12 @@ Race::Race(int num) {
 	case 7 :
 		RaceName = "Amazons";
 		RaceTokens = 6;
+		specialTokenNumber = 4;
 		break;
 	case 3 :
 		RaceName = "Dwarves";
 		RaceTokens = 3;
+		coinPower = "mine";
 		break;
 	case 8:
 		RaceName = "Elves";
@@ -69,7 +81,8 @@ Race::Race(int num) {
 		break;
 	case 4:
 		RaceName = "Giants";
-		RaceTokens = 6;		
+		RaceTokens = 6;	
+		tokenPower = "mountain";
 		break;
 	case 5:
 		RaceName = "Ghouls";
@@ -103,6 +116,7 @@ Race::Race(int num) {
 	case 12:
 		RaceName = "Tritons";
 		RaceTokens = 6;
+		tokenPower = "water";
 		break;
 	case 13:
 		RaceName = "Trolls";
@@ -111,6 +125,7 @@ Race::Race(int num) {
 	case 14:
 		RaceName = "Wizards";
 		RaceTokens = 8;
+		coinPower = "magic";
 		break;
 		
 	default:

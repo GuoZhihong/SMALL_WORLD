@@ -69,8 +69,13 @@ public:
 	void setUnusedRaceName(string s);
 	string getUnusedRaceName();
 
+	/*special power method----------*/
 	void setSpecialPowerToken(int i);
 	int getSpecialPowerToken();
+	void setCoinPower(string s);
+	string getCoinPower();
+	void setTokenPower(string s);
+	string getTokenPower();
 
 	void setDice_Number_Unused(int i);
 	int getDice_Number_Unused();
@@ -122,6 +127,11 @@ private:
 	string unusedRaceName;
 
 	int specialPowerToken;
+	string coinPower = "Null";
+	string tokenPower = "Null";
+	int gameTurnNumber = 0;
+
+
 	int totalScore;
 	int test;
 	int playerIndex;

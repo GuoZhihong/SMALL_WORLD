@@ -38,6 +38,7 @@ Badges::Badges(int num) {
 	case 7:
 		BadgeName = "Forest";
 		BadgesTokens = 4;
+		coinPower = "forest";
 		break;
 	case 8:
 		BadgeName = "Fortified";
@@ -49,6 +50,7 @@ Badges::Badges(int num) {
 	case 10:
 		BadgeName = "Hill";
 		BadgesTokens = 4;
+		coinPower = "hill";
 		break;
 	case 11:
 		BadgeName = "Merchant";
@@ -57,6 +59,8 @@ Badges::Badges(int num) {
 	case 12:
 		BadgeName = "Mounted";
 		BadgesTokens = 5;
+		tokenPower1= "hill";
+		tokenPower2 = "farmland";
 		break;
 	case 13:
 		BadgeName = "Pillaging";
@@ -78,10 +82,12 @@ Badges::Badges(int num) {
 	case 17:
 		BadgeName = "Swamp";
 		BadgesTokens = 4;
+		coinPower = "swamp";
 		break;
 	case 18:
 		BadgeName = "Underworld";
 		BadgesTokens = 5;
+		tokenPower1 = "cavern";
 		break;
 	case 19:
 		BadgeName = "Wealthy";
